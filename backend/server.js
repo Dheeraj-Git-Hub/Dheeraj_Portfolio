@@ -7,7 +7,7 @@ require("dotenv").config();
 
 const app = express();
 app.use(cors({
-  origin: "https://dheeraj-portfolio-ajti.onrender.com"
+  origin: "https://dheeraj-portfolio-lyart.vercel.app/"
 }));
 app.use(express.json());
 
