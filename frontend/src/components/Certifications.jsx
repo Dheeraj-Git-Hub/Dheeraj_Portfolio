@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:5000";
+const API = "https://dheeraj-portfolio-ajti.onrender.com";
 
 export default function Certifications() {
   const [certs,   setCerts]   = useState([]);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import SkillOrbit from "./SkillOrbit";
 
-const API = "http://localhost:5000";
+const API = "https://dheeraj-portfolio-ajti.onrender.com";
 
 function SkillBar({ name, level, delay }) {
   const [animated, setAnimated] = useState(false);
