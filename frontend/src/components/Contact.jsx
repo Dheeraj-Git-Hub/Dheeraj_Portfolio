@@ -11,7 +11,7 @@ const SOCIAL_LINKS = [
 
 // ✅ Change this to your deployed backend URL when you go live
 // e.g. "https://your-app.onrender.com"
-const API_URL = "http://localhost:5000";
+const API_URL = "https://dheeraj-portfolio-ajti.onrender.com";
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
