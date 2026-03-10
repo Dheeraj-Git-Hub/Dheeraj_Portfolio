@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import './App.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Navbar        from './Components/Navbar';
-import About         from './Components/About';
-import Skills        from './Components/Skills';
-import Projects      from './Components/Projects';
-import Experience    from './Components/Experience';
-import Certifications from './Components/Certifications';
-import Contact       from './Components/Contact';
-import Footer        from './Components/Footer';
+import Navbar        from './components/Navbar';
+import About         from './components/About';
+import Skills        from './components/Skills';
+import Projects      from './components/Projects';
+import Experience    from './components/Experience';
+import Certifications from './components/Certifications';
+import Contact       from './components/Contact';
+import Footer        from './components/Footer';
 import AdminPanel    from "./pages/AdminPanel";
 
 const NAV_LINKS = ["About", "Skills", "Projects", "Experience", "Contact"];
