@@ -9,8 +9,6 @@ const SOCIAL_LINKS = [
   { label: "Email",    icon: <MdEmail />,    href: "mailto:dheerajies1998@email.com",            color: "#EA4335" },
 ];
 
-// ✅ Change this to your deployed backend URL when you go live
-// e.g. "https://your-app.onrender.com"
 const API_URL = "https://dheeraj-portfolio-ajti.onrender.com";
 
 export default function Contact() {
@@ -24,23 +22,34 @@ export default function Contact() {
     setLoading(true);
     setError("");
 
-    try {
-      const res = await fetch(`${API_URL}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to send message.");
+    const tryFetch = async (retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const res = await fetch(`${API_URL}/api/contact`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || "Failed to send message.");
+          }
+          return true;
+        } catch (err) {
+          if (i === retries - 1) throw err;
+          // Wait 3 seconds before retrying (server waking up)
+          await new Promise(r => setTimeout(r, 3000));
+        }
       }
+    };
 
+    try {
+      await tryFetch();
       setSubmitted(true);
       setFormData({ name: "", email: "", message: "" });
       setTimeout(() => setSubmitted(false), 4000);
     } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
+      setError("Server is waking up, please try again in 30 seconds.");
     } finally {
       setLoading(false);
     }
@@ -110,7 +119,7 @@ export default function Contact() {
               style={{ alignSelf: "flex-start", opacity: loading ? 0.7 : 1 }}
               disabled={loading}
             >
-              {loading ? "Sending..." : "Send Message →"}
+              {loading ? "Connecting to server..." : "Send Message →"}
             </button>
           </form>
         )}

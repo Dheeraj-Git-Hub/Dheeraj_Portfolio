@@ -64,7 +64,7 @@ export default function Navbar({ activeSection, scrollTo }) {
       </div>
 
       {/* Hire Me — desktop only */}
-      <a href="mailto:dheerajkumar@email.com" className="glow-btn hire-btn desktop-hire">
+      <a href="mailto:dheerajies1998@gmail.com" className="glow-btn hire-btn desktop-hire">
         Hire Me
       </a>
     </nav>
