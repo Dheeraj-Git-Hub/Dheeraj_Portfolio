@@ -170,14 +170,19 @@ app.post("/api/contact", async (req, res) => {
   if (!name || !email || !message)
     return res.status(400).json({ error: "All fields required." });
   try {
+    // ✅ Save to DB first
     await Contact.create({ name, email, message });
-    await transporter.sendMail({
+
+    // ✅ Send email separately (won't block or fail the response)
+    transporter.sendMail({
       from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_USER,
       replyTo: email,
       subject: `📬 New message from ${name}`,
       html: `<h2>New Contact</h2><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Message:</b><br/>${message.replace(/\n/g, "<br/>")}</p>`,
-    });
+    }).catch(err => console.error("❌ Email failed:", err));
+
+    // ✅ Respond immediately after DB save
     res.json({ success: true });
   } catch (err) {
     console.error("❌", err);
@@ -198,16 +203,14 @@ app.post("/api/admin/login", (req, res) => {
 // ═══════════════════════════════════════════
 //  ADMIN: MESSAGES
 // ═══════════════════════════════════════════
-app.get("/api/admin/messages",           auth, async (_, res) => res.json(await Contact.find().sort({ createdAt: -1 })));
-app.patch("/api/admin/messages/:id/read",auth, async (req, res) => { await Contact.findByIdAndUpdate(req.params.id, { read: true }); res.json({ success: true }); });
-app.delete("/api/admin/messages/:id",    auth, async (req, res) => { await Contact.findByIdAndDelete(req.params.id); res.json({ success: true }); });
+app.get("/api/admin/messages",            auth, async (_, res) => res.json(await Contact.find().sort({ createdAt: -1 })));
+app.patch("/api/admin/messages/:id/read", auth, async (req, res) => { await Contact.findByIdAndUpdate(req.params.id, { read: true }); res.json({ success: true }); });
+app.delete("/api/admin/messages/:id",     auth, async (req, res) => { await Contact.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
 // ═══════════════════════════════════════════
 //  ADMIN CRUD FACTORY
-//  Creates GET all / POST / PUT /:id / DELETE /:id / PATCH reorder
 // ═══════════════════════════════════════════
 function crudRoutes(router, path, Model) {
-  // reorder MUST come before /:id or Express treats "reorder" as an id param
   router.patch(`${path}/reorder`, auth, async (req, res) => {
     try {
       await Promise.all(req.body.map(({ id, order }) => Model.findByIdAndUpdate(id, { order })));
@@ -220,10 +223,10 @@ function crudRoutes(router, path, Model) {
   router.delete(`${path}/:id`, auth, async (req, res) => { await Model.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 }
 
-crudRoutes(app, "/api/admin/projects",    Project);
-crudRoutes(app, "/api/admin/experience",  Experience);
-crudRoutes(app, "/api/admin/certs",       Cert);
-crudRoutes(app, "/api/admin/skills",      Skill);
+crudRoutes(app, "/api/admin/projects",   Project);
+crudRoutes(app, "/api/admin/experience", Experience);
+crudRoutes(app, "/api/admin/certs",      Cert);
+crudRoutes(app, "/api/admin/skills",     Skill);
 
 // ─────────────────────────────────────────
 app.get("/", (_, res) => res.send("✅ Portfolio backend running"));
