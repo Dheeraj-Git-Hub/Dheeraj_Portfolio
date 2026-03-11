@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API = "http://localhost:5000";
+const API = "https://dheeraj-portfolio.onrender.com";
 
 // ─── tiny helpers ────────────────────────────────────────────────────────────
 const authH = (token) => ({ Authorization: `Bearer ${token}`, "Content-Type": "application/json" });
