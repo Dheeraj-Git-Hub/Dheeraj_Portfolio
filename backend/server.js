@@ -8,8 +8,19 @@ require("dotenv").config();
 const app    = express();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// app.use(cors({
+//   origin: "https://dheeraj-portfolio-lyart.vercel.app",
+//   credentials: true,
+//   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+// }));
+
+// AFTER ✅
 app.use(cors({
-  origin: "https://dheeraj-portfolio-lyart.vercel.app",
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://dheeraj-portfolio-lyart.vercel.app",
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 }));
