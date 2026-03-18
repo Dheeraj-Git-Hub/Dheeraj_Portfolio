@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+
 const API = "https://dheeraj-portfolio-ajti.onrender.com";
 
 // ─── tiny helpers ────────────────────────────────────────────────────────────
@@ -82,10 +83,17 @@ function MessagesTab({ token, toast }) {
   const [selected, setSelected] = useState(null);
   const [filter, setFilter]     = useState("all");
   const [confirm, setConfirm]   = useState(null);
+  const [error, setError]       = useState(null); // ✅ NEW: track auth errors
 
   useEffect(() => {
     fetch(`${API}/api/admin/messages`, { headers: authH(token) })
-      .then(r => r.json()).then(setMessages).finally(() => setLoading(false));
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+        return r.json();
+      })
+      .then(data => setMessages(Array.isArray(data) ? data : [])) // ✅ FIX: guard array
+      .catch(err => { setError(err.message); setMessages([]); })  // ✅ FIX: catch errors
+      .finally(() => setLoading(false));
   }, [token]);
 
   const markRead = async (id) => {
@@ -102,10 +110,19 @@ function MessagesTab({ token, toast }) {
   };
 
   const open = (msg) => { setSelected(msg); if (!msg.read) markRead(msg._id); };
-  const unread = messages.filter(m => !m.read).length;
+  const unread   = messages.filter(m => !m.read).length;
   const filtered = messages.filter(m => filter === "all" ? true : filter === "unread" ? !m.read : m.read);
 
   if (loading) return <div className="admin-loading"><div className="admin-spinner" /><p>Loading...</p></div>;
+
+  // ✅ NEW: show error state instead of crashing
+  if (error) return (
+    <div className="admin-empty">
+      <p className="admin-empty-icon">⚠️</p>
+      <p>Failed to load messages: {error}</p>
+      <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: 8 }}>Check your login token or try logging out and back in.</p>
+    </div>
+  );
 
   return (
     <>
@@ -182,21 +199,28 @@ function CrudTab({ token, toast, config }) {
 
   const [items,   setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null);   // null=closed, {}=new, item=edit
+  const [editing, setEditing] = useState(null);
   const [confirm, setConfirm] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const r = await fetch(`${API}/api/admin/${endpoint}`, { headers: authH(token) });
-    setItems(await r.json());
-    setLoading(false);
+    try {
+      const r = await fetch(`${API}/api/admin/${endpoint}`, { headers: authH(token) });
+      if (!r.ok) throw new Error(`${r.status}`);
+      const data = await r.json();
+      setItems(Array.isArray(data) ? data : []); // ✅ FIX: guard array
+    } catch {
+      setItems([]); // ✅ FIX: never leave items as non-array
+    } finally {
+      setLoading(false);
+    }
   }, [endpoint, token]);
 
   useEffect(() => { load(); }, [load]);
 
   const save = async (data) => {
-    const isNew = !data._id;
-    const url   = isNew ? `${API}/api/admin/${endpoint}` : `${API}/api/admin/${endpoint}/${data._id}`;
+    const isNew  = !data._id;
+    const url    = isNew ? `${API}/api/admin/${endpoint}` : `${API}/api/admin/${endpoint}/${data._id}`;
     const method = isNew ? "POST" : "PUT";
     const r = await fetch(url, { method, headers: authH(token), body: JSON.stringify(data) });
     if (r.ok) { toast(`${label} ${isNew?"added":"updated"}`, "success"); load(); setEditing(null); }
@@ -220,11 +244,7 @@ function CrudTab({ token, toast, config }) {
     <>
       {confirm && <ConfirmModal msg={`Delete this ${label.toLowerCase()}?`} onConfirm={() => del(confirm)} onCancel={() => setConfirm(null)} />}
       {editing !== null && (
-        <FormComponent
-          initial={editing}
-          onSave={save}
-          onClose={() => setEditing(null)}
-        />
+        <FormComponent initial={editing} onSave={save} onClose={() => setEditing(null)} />
       )}
 
       <div className="admin-tab-header">
@@ -366,14 +386,19 @@ const TABS = [
 ];
 
 export default function AdminDashboard({ token, onLogout }) {
-  const [activeTab, setActiveTab] = useState("messages");
-  const [toasts,    setToasts]    = useState([]);
-  const [unreadCount, setUnread]  = useState(0);
-  const [mobileNav, setMobileNav] = useState(false);
+  const [activeTab,   setActiveTab]  = useState("messages");
+  const [toasts,      setToasts]     = useState([]);
+  const [unreadCount, setUnread]     = useState(0);
+  const [mobileNav,   setMobileNav]  = useState(false);
 
   useEffect(() => {
     fetch(`${API}/api/admin/messages`, { headers: authH(token) })
-      .then(r => r.json()).then(d => setUnread(d.filter(m => !m.read).length)).catch(() => {});
+      .then(r => {
+        if (!r.ok) throw new Error("Unauthorized");
+        return r.json();
+      })
+      .then(d => setUnread(Array.isArray(d) ? d.filter(m => !m.read).length : 0)) // ✅ FIX: guard array
+      .catch(() => setUnread(0)); // ✅ FIX: don't crash on 401
   }, [token, activeTab]);
 
   const toast = (msg, type = "success") => {

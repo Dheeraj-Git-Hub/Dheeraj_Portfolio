@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 
+const API = import.meta.env.VITE_API_URL || "https://dheeraj-portfolio-ajti.onrender.com";
+
 export default function AdminLogin({ onLogin }) {
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/login`, {
+      const res = await fetch(`${API}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password }),
